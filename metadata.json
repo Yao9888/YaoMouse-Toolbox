@@ -1,0 +1,5 @@
+{
+  "name": "YaoMouse Toolbox",
+  "description": "工业级视觉动作自动化套件，支持视觉触发、极速点击和路径录制。",
+  "requestFramePermissions": []
+}
