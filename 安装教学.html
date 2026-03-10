@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YaoMouse Toolbox - 安装与部署教学</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000; color: #d4d4d8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .card { background-color: rgba(24, 24, 27, 0.5); border: 1px solid #27272a; border-radius: 0.75rem; padding: 1.5rem; backdrop-filter: blur(4px); }
+        code { background-color: #09090b; color: #10b981; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-family: monospace; }
+        kbd { background-color: #27272a; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.875rem; }
+    </style>
+</head>
+<body class="p-8 max-w-4xl mx-auto">
+    <header class="mb-12">
+        <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">YaoMouse <span class="text-emerald-500">Toolbox</span></h1>
+        <p class="text-zinc-500">Windows 10 环境部署与运行教学</p>
+    </header>
+
+    <div class="space-y-8">
+        <!-- Step 1 -->
+        <div class="flex gap-4">
+            <div class="flex-shrink-0 w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center font-bold border border-emerald-500/20">1</div>
+            <div class="space-y-2">
+                <h3 class="text-white font-bold text-lg">安装 Python 运行环境</h3>
+                <p class="text-sm text-zinc-400">前往 <a href="https://www.python.org/downloads/" target="_blank" class="text-emerald-400 underline">Python 官网</a> 下载最新版 (推荐 3.10 或更高)。</p>
+                <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-lg flex items-start gap-3">
+                    <span class="text-red-500 font-bold">⚠️ 重要：</span>
+                    <p class="text-sm text-red-400 font-medium">安装时务必勾选 <span class="underline">"Add Python to PATH"</span> 选项！否则无法在命令行运行。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-4">
+            <div class="flex-shrink-0 w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center font-bold border border-emerald-500/20">2</div>
+            <div class="space-y-2">
+                <h3 class="text-white font-bold text-lg">解压代码压缩包</h3>
+                <p class="text-sm text-zinc-400">将从 GitHub 下载的 ZIP 文件右键解压到任意文件夹（例如桌面）。</p>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-4">
+            <div class="flex-shrink-0 w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center font-bold border border-emerald-500/20">3</div>
+            <div class="space-y-2">
+                <h3 class="text-white font-bold text-lg">安装依赖库</h3>
+                <p class="text-sm text-zinc-400">在解压后的文件夹空白处，按住 <kbd>Shift</kbd> 并右键，选择“在此处打开 PowerShell 窗口”或“命令提示符”。</p>
+                <p class="text-sm text-zinc-400">输入以下命令并回车：</p>
+                <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800 font-mono text-sm text-emerald-400">
+                    pip install -r requirements.txt
+                </div>
+                <p class="text-xs text-zinc-500 italic">注：如果提示 pip 不是内部命令，说明步骤 1 的 PATH 没勾选，请重新安装 Python。</p>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="flex gap-4">
+            <div class="flex-shrink-0 w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center font-bold border border-emerald-500/20">4</div>
+            <div class="space-y-2">
+                <h3 class="text-white font-bold text-lg">启动程序</h3>
+                <p class="text-sm text-zinc-400">在同一个窗口中输入以下命令启动：</p>
+                <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800 font-mono text-sm text-emerald-400">
+                    python vibecontrol_pro.py
+                </div>
+            </div>
+        </div>
+
+        <!-- EXE Section -->
+        <div class="pt-8 border-t border-zinc-800">
+            <h3 class="text-emerald-400 font-bold text-xl mb-4 flex items-center gap-2">
+                🚀 进阶：生成独立 EXE 可执行文件
+            </h3>
+            <div class="card space-y-4">
+                <p class="text-sm text-zinc-400">如果你想把程序打包成一个双击即可运行的 .exe 文件，请执行：</p>
+                <div class="space-y-3">
+                    <p class="text-sm text-zinc-300">1. 安装打包工具：<code>pip install pyinstaller</code></p>
+                    <p class="text-sm text-zinc-300">2. 执行打包命令：</p>
+                    <div class="bg-zinc-950 p-4 rounded-lg border border-zinc-800 font-mono text-sm text-emerald-400">
+                        pyinstaller --noconsole --onefile vibecontrol_pro.py
+                    </div>
+                    <p class="text-sm text-zinc-300">3. 在生成的 <code>dist</code> 文件夹中找到 <code>vibecontrol_pro.exe</code>。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="pt-8 border-t border-zinc-800">
+            <h3 class="text-emerald-400 font-bold text-lg mb-4">🔍 常见问题排查</h3>
+            <ul class="list-disc list-inside text-sm text-zinc-500 space-y-2">
+                <li>提示 <code>ModuleNotFoundError</code>: 说明依赖没装全，请重新执行步骤 3。</li>
+                <li>程序启动后没反应: 检查是否有杀毒软件拦截了模拟点击操作。</li>
+                <li>紧急停止: 运行中如需停止，请按键盘左上角的 <kbd>ESC</kbd> 键。</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer class="mt-12 pt-8 border-t border-zinc-800 text-center text-zinc-600 text-xs">
+        &copy; 2026 YaoMouse Toolbox. All Rights Reserved.
+    </footer>
+</body>
+</html>
