@@ -255,6 +255,9 @@ class YaoMouseToolbox:
     def on_global_key(self, key):
         if key == keyboard.Key.esc:
             self.kill_switch()
+        elif key == keyboard.Key.f1:
+            if self.is_recording:
+                self.stop_recording()
 
     def kill_switch(self):
         self.stop_event.set()
@@ -386,11 +389,10 @@ class YaoMouseToolbox:
             self.rec_overlay.destroy()
             
         self.rec_overlay = tk.Toplevel(self.root)
-        self.rec_overlay.geometry("400x220")
         self.rec_overlay.attributes("-topmost", True)
         self.rec_overlay.overrideredirect(True)
         
-        # Center on screen
+        # Center on screen for countdown
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
         self.rec_overlay.geometry(f"400x220+{int(sw/2-200)}+{int(sh/2-110)}")
@@ -420,14 +422,24 @@ class YaoMouseToolbox:
         self.is_recording = True
         self.start_record_time = time.perf_counter()
         
-        # Update UI to recording state
-        self.status_label.configure(text="正在录制宏")
-        self.countdown_label.pack_forget()
+        # Shrink and move to bottom right
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        # Compact size for recording phase
+        self.rec_overlay.geometry(f"250x120+{sw-270}+{sh-170}")
         
-        self.rec_count_label = ctk.CTkLabel(self.overlay_frame, text="已捕捉动作: 0", font=("Arial", 16, "bold"), text_color="black")
-        self.rec_count_label.pack(pady=10)
+        # Clear frame and rebuild for compact view
+        for widget in self.overlay_frame.winfo_children():
+            widget.destroy()
+            
+        self.overlay_frame.configure(fg_color="#e74c3c", border_color="white") # Red for recording
         
-        ctk.CTkLabel(self.overlay_frame, text="[ 按 ESC 键停止录制 ]", font=("Arial", 14, "bold"), text_color="black").pack(pady=5)
+        ctk.CTkLabel(self.overlay_frame, text="● 正在录制中", font=("Arial", 16, "bold"), text_color="white").pack(pady=(15, 5))
+        
+        self.rec_count_label = ctk.CTkLabel(self.overlay_frame, text="已捕捉动作: 0", font=("Arial", 13, "bold"), text_color="white")
+        self.rec_count_label.pack(pady=2)
+        
+        ctk.CTkLabel(self.overlay_frame, text="按 F1 键停止并保存", font=("Arial", 14, "bold"), text_color="yellow").pack(pady=5)
         
         def on_click(x, y, button, pressed):
             if not self.is_recording: return False
@@ -451,9 +463,10 @@ class YaoMouseToolbox:
 
         def on_press(key):
             if not self.is_recording: return False
-            if key == keyboard.Key.esc:
-                self.stop_recording()
+            # We use global listener for F1 to avoid conflicts, but keep this for key capture
+            if key == keyboard.Key.f1:
                 return False
+            
             try: k = key.char
             except: k = str(key)
             self.recorded_events.append({
@@ -466,7 +479,8 @@ class YaoMouseToolbox:
 
         def on_release(key):
             if not self.is_recording: return False
-            if key == keyboard.Key.esc: return False
+            if key == keyboard.Key.f1: return False
+            
             try: k = key.char
             except: k = str(key)
             self.recorded_events.append({
