@@ -28,6 +28,9 @@ class YaoMouseToolbox:
         self.stop_event = threading.Event()
         self.monitoring_active = False
         self.clicker_active = False
+        self.is_shrunk = False
+        self.original_geometry = "1150x750"
+        self.current_frame = "visual"
         
         # Recording state
         self.is_recording = False
@@ -243,9 +246,40 @@ class YaoMouseToolbox:
         ctk.CTkLabel(info_box, text="使用说明:\n1. 视觉触发: 截图 -> 录制 -> 保存 -> 监控。\n2. 录制器: 录制时会捕捉所有鼠标点击、滚动和键盘按键。\n3. 紧急停止: 任何时候按 ESC 键都会立即停止所有自动化操作。\n4. 时间间隔: 播放时会严格遵守录制时的时间间隔。", justify="left").pack(pady=20, padx=20)
 
     def show_frame(self, name):
+        self.current_frame = name
         for f in self.frames.values():
             f.pack_forget()
         self.frames[name].pack(fill="both", expand=True)
+
+    def shrink_window(self, title="正在运行..."):
+        if not self.is_shrunk:
+            self.is_shrunk = True
+            sw = self.root.winfo_screenwidth()
+            sh = self.root.winfo_screenheight()
+            self.root.geometry(f"300x150+{sw-320}+{sh-200}")
+            self.root.attributes("-topmost", True)
+            self.sidebar.grid_remove()
+            for f in self.frames.values():
+                f.pack_forget()
+            
+            if not hasattr(self, 'running_frame'):
+                self.running_frame = ctk.CTkFrame(self.main_area)
+                self.running_label = ctk.CTkLabel(self.running_frame, text=title, font=("Arial", 16, "bold"))
+                self.running_label.pack(pady=20)
+                ctk.CTkLabel(self.running_frame, text="按 ESC 键停止所有功能", font=("Arial", 12)).pack()
+            
+            self.running_label.configure(text=title)
+            self.running_frame.pack(fill="both", expand=True)
+
+    def restore_window(self):
+        if self.is_shrunk:
+            self.is_shrunk = False
+            self.root.geometry(self.original_geometry)
+            self.root.attributes("-topmost", False)
+            self.sidebar.grid()
+            if hasattr(self, 'running_frame'):
+                self.running_frame.pack_forget()
+            self.show_frame(self.current_frame)
 
     def setup_listeners(self):
         # Global ESC listener
@@ -258,6 +292,8 @@ class YaoMouseToolbox:
         elif key == keyboard.Key.f1:
             if self.is_recording:
                 self.stop_recording()
+        elif key == keyboard.Key.f2:
+            self.root.after(0, self.toggle_clicker)
 
     def kill_switch(self):
         self.stop_event.set()
@@ -268,6 +304,7 @@ class YaoMouseToolbox:
         # Reset UI buttons
         self.root.after(0, lambda: self.btn_toggle_clicker.configure(text="启动点击器", fg_color="#3b8ed0"))
         self.root.after(0, lambda: self.btn_monitor.configure(text="开始监控屏幕", fg_color="#27ae60"))
+        self.root.after(0, self.restore_window)
         print("全局紧急停止已激活 (ESC)")
 
     # --- Task Management ---
@@ -500,10 +537,6 @@ class YaoMouseToolbox:
         if hasattr(self, 'rec_count_label'):
             self.rec_count_label.configure(text=f"已捕捉动作: {len(self.recorded_events)}")
 
-    def update_rec_count(self):
-        if hasattr(self, 'rec_count_label'):
-            self.rec_count_label.configure(text=f"已捕捉动作: {len(self.recorded_events)}")
-
     def stop_recording(self):
         self.is_recording = False
         if hasattr(self, 'rec_overlay'):
@@ -548,7 +581,9 @@ class YaoMouseToolbox:
     # --- Playback Engine ---
     def play_macro(self):
         selection = self.macro_list.curselection()
-        if not selection: return
+        if not selection:
+            messagebox.showwarning("警告", "请先从列表中选择一个宏 (.macro)")
+            return
         filename = self.macro_list.get(selection[0])
         path = os.path.join(self.tasks_dir, filename)
         
@@ -560,7 +595,12 @@ class YaoMouseToolbox:
         except: loops = 1
         
         self.stop_event.clear()
-        threading.Thread(target=self.playback_loop, args=(macro, loops), daemon=True).start()
+        self.shrink_window(f"正在播放: {filename}")
+        threading.Thread(target=self.playback_wrapper, args=(macro, loops), daemon=True).start()
+
+    def playback_wrapper(self, macro, loops):
+        self.playback_loop(macro, loops)
+        self.root.after(0, self.restore_window)
 
     def playback_loop(self, macro, loops=1):
         count = 0
@@ -612,10 +652,12 @@ class YaoMouseToolbox:
             self.clicker_active = True
             self.stop_event.clear()
             self.btn_toggle_clicker.configure(text="停止点击器", fg_color="#c0392b")
+            self.shrink_window("点击器运行中 (F2/ESC停止)")
             threading.Thread(target=self.enhanced_clicker_loop, daemon=True).start()
         else:
             self.clicker_active = False
             self.btn_toggle_clicker.configure(text="启动点击器", fg_color="#3b8ed0")
+            self.restore_window()
 
     def enhanced_clicker_loop(self):
         import random
@@ -646,44 +688,45 @@ class YaoMouseToolbox:
     # --- Monitoring Engine ---
     def toggle_monitoring(self):
         if not self.monitoring_active:
+            selection = self.visual_list.curselection()
+            if not selection:
+                messagebox.showwarning("警告", "请先从列表中选择一个视觉任务 (.vtask)")
+                return
+            
+            filename = self.visual_list.get(selection[0])
             self.monitoring_active = True
             self.stop_event.clear()
             self.btn_monitor.configure(text="停止监控", fg_color="#c0392b")
-            threading.Thread(target=self.monitor_loop, daemon=True).start()
+            self.shrink_window(f"监控中: {filename}")
+            threading.Thread(target=self.monitor_loop, args=(filename,), daemon=True).start()
         else:
             self.monitoring_active = False
             self.btn_monitor.configure(text="开始监控屏幕", fg_color="#27ae60")
+            self.restore_window()
 
-    def monitor_loop(self):
+    def monitor_loop(self, filename):
+        path = os.path.join(self.tasks_dir, filename)
+        try:
+            with open(path, "r") as f:
+                task = json.load(f)
+        except:
+            self.kill_switch()
+            return
+
         while self.monitoring_active and not self.stop_event.is_set():
-            tasks = []
-            if os.path.exists(self.tasks_dir):
-                for f in os.listdir(self.tasks_dir):
-                    if f.endswith(".vtask"):
-                        try:
-                            with open(os.path.join(self.tasks_dir, f), "r") as file:
-                                tasks.append(json.load(file))
-                        except: continue
-            
-            if not tasks:
-                time.sleep(1)
-                continue
-
             screen = np.array(ImageGrab.grab())
             screen_gray = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
             
-            for task in tasks:
-                if not self.monitoring_active or self.stop_event.is_set(): break
-                trigger = cv2.imread(task["trigger_img"], 0)
-                if trigger is None: continue
-                
-                res = cv2.matchTemplate(screen_gray, trigger, cv2.TM_CCOEFF_NORMED)
-                _, max_val, _, _ = cv2.minMaxLoc(res)
-                
-                if max_val >= task.get("threshold", 0.95):
-                    print(f"视觉匹配成功: {task['task_name']}")
-                    self.playback_loop(task["sequence"], loops=1)
-                    time.sleep(2) # Cooldown
+            trigger = cv2.imread(task["trigger_img"], 0)
+            if trigger is None: break
+            
+            res = cv2.matchTemplate(screen_gray, trigger, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, _ = cv2.minMaxLoc(res)
+            
+            if max_val >= task.get("threshold", 0.95):
+                print(f"视觉匹配成功: {task['task_name']}")
+                self.playback_loop(task["sequence"], loops=1)
+                time.sleep(2) # Cooldown
             time.sleep(0.2)
 
     def run(self):
