@@ -71,13 +71,13 @@ export default function App() {
           />
           <SidebarItem 
             icon={MousePointer2} 
-            label="极速点击器" 
+            label="增强型点击器" 
             active={activeTab === 'clicker'} 
             onClick={() => setActiveTab('clicker')} 
           />
           <SidebarItem 
-            icon={Video} 
-            label="路径录制器" 
+            icon={History} 
+            label="全功能录制器" 
             active={activeTab === 'recorder'} 
             onClick={() => setActiveTab('recorder')} 
           />
