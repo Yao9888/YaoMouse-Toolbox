@@ -171,7 +171,7 @@ class YaoMouseToolbox:
         self.btn_toggle_clicker = ctk.CTkButton(frame, text="启动点击器", height=50, font=ctk.CTkFont(size=15, weight="bold"), command=self.toggle_clicker)
         self.btn_toggle_clicker.pack(pady=30)
         
-        ctk.CTkLabel(frame, text="提示: 启动后按 ESC 键可立即停止", text_color="gray").pack()
+        ctk.CTkLabel(frame, text="提示: 按 F2 键启动/停止，按 ESC 键立即停止", text_color="gray").pack()
 
     def setup_recorder_frame(self):
         frame = ctk.CTkFrame(self.main_area)
@@ -243,7 +243,7 @@ class YaoMouseToolbox:
         
         info_box = ctk.CTkFrame(frame)
         info_box.pack(pady=20, padx=40, fill="both", expand=True)
-        ctk.CTkLabel(info_box, text="使用说明:\n1. 视觉触发: 截图 -> 录制 -> 保存 -> 监控。\n2. 录制器: 录制时会捕捉所有鼠标点击、滚动和键盘按键。\n3. 紧急停止: 任何时候按 ESC 键都会立即停止所有自动化操作。\n4. 时间间隔: 播放时会严格遵守录制时的时间间隔。", justify="left").pack(pady=20, padx=20)
+        ctk.CTkLabel(info_box, text="使用说明:\n1. 视觉触发: 截图(窗口自动缩小) -> 录制 -> 保存 -> 监控。\n2. 录制器: 录制捕捉所有键鼠操作。按 F1 停止并保存录制。\n3. 点击器: 按 F2 键可快速启动或停止增强型点击器。\n4. 紧急停止: 任何时候按 ESC 键都会立即停止所有自动化并恢复窗口。\n5. 自动缩小: 监控、播放和点击器运行期间，窗口会自动缩小至右下角。", justify="left").pack(pady=20, padx=20)
 
     def show_frame(self, name):
         self.current_frame = name
@@ -382,6 +382,7 @@ class YaoMouseToolbox:
 
     # --- Screenshot Tool ---
     def start_screenshot_tool(self):
+        self.shrink_window("正在截取图像...")
         self.snip_win = tk.Toplevel(self.root)
         self.snip_win.attributes("-alpha", 0.3)
         self.snip_win.attributes("-fullscreen", True)
@@ -408,6 +409,7 @@ class YaoMouseToolbox:
     def on_snip_release(self, event):
         end_x, end_y = event.x, event.y
         self.snip_win.destroy()
+        self.restore_window()
         
         x1, y1 = min(self.start_x, end_x), min(self.start_y, end_y)
         x2, y2 = max(self.start_x, end_x), max(self.start_y, end_y)
